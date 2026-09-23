@@ -34,7 +34,7 @@ static float cameraReloadTimer = 0.0f;
 // The cube is NOT moved by hand gestures yet.
 
 static bool handTestMode = true;
-static char handGesture[128] = "WAITING FOR HAND...";
+static char handGesture[128] = "WAITING FOR HANDWRITING...";
 static float handGestureDisplayTimer = 0.0f;
 
 // ============================================================
