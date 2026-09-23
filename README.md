@@ -2,6 +2,14 @@
 
 A personal 3D Rubik's Cube project built in C and raylib, expanded step-by-step with speedcubing tools, automatic solving, OpenCV, MediaPipe and personal handwriting recognition.
 
+## Project Preview
+
+![Project poster](docs/images/project-poster.jpg)
+
+![Hand control and handwriting](docs/images/hand-control.jpg)
+
+![3D cube gameplay](docs/images/cube-gameplay.jpg)
+
 ## Project Story
 
 This project started as a simple idea: build a playable 3D Rubik's Cube. As I developed it, the idea changed several times and became a larger experiment combining 3D graphics, algorithms, speedcubing, computer vision and handwriting control.
@@ -22,11 +30,7 @@ The cube became a practice tool with random 20-move scrambles, animated scramble
 
 I added a START button, solve timer, automatic timer stop after solving, move count, best single, average of 5, average of 12 and total solves.
 
-The timer was changed so that START begins the solve instead of normal cube moves automatically starting the timer.
-
 ### 5. Undo and redo
-
-I added cube-state history for easier experimentation.
 
 - Ctrl+Z: Undo
 - Ctrl+Y: Redo
@@ -37,21 +41,19 @@ I integrated the Kociemba two-phase solver. The program reads the cube stickers,
 
 ### 7. Camera and computer vision
 
-I then experimented with OpenCV webcam capture and MediaPipe hand landmarks. The camera could display white hand landmark dots and lines, and the live feed was integrated into the raylib window.
+I experimented with OpenCV webcam capture and MediaPipe hand landmarks. The camera can display hand landmark dots and lines, and the live feed is integrated into the raylib window.
 
-### 8. Changing from gestures to handwriting
+### 8. Handwriting control
 
-My first hand-control idea used different gestures for different cube moves. I changed the idea because I wanted a simpler interaction.
+The interaction was changed from gesture-only control to writing Rubik's Cube move letters in the air using the index finger.
 
-> Write a Rubik's Cube move in the air using the index finger.
-
-The supported move letters are:
+Supported moves:
 
 R L U D F B
 
 ### 9. Personal handwriting recognition
 
-The Python program tracks the index fingertip, collects the writing stroke, normalizes it and compares it with my own stored handwriting examples. Dynamic Time Warping (DTW) is used for the comparison.
+The Python program tracks the index fingertip, collects the writing stroke, normalizes it and compares it with stored handwriting examples. Dynamic Time Warping (DTW) is used for comparison.
 
 Communication pipeline:
 
@@ -71,38 +73,6 @@ hand_command.txt
 C / raylib
   ↓
 Rubik's Cube move
-```
-
-### 10. Combined project
-
-The project now combines the following stages:
-
-```text
-3D Cube
-  ↓
-Camera Orbit
-  ↓
-Scramble + Reset
-  ↓
-Solved Detection
-  ↓
-Speedcubing Timer
-  ↓
-Statistics
-  ↓
-Undo / Redo
-  ↓
-Kociemba Auto Solver
-  ↓
-OpenCV Camera
-  ↓
-MediaPipe Hand Tracking
-  ↓
-Hand Gesture Experiments
-  ↓
-Handwriting Control
-  ↓
-Personal Handwriting Recognition
 ```
 
 ## Main Features
@@ -172,6 +142,11 @@ Rubiks-Cube-Hand-Control/
 │   ├── hand_writing_test.py
 │   ├── resource_dir.h
 │   └── application.rc
+├── docs/
+│   └── images/
+│       ├── project-poster.jpg
+│       ├── hand-control.jpg
+│       └── cube-gameplay.jpg
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
@@ -218,7 +193,7 @@ Generated files such as these are not source code:
 - hand_command.txt
 - hand_gesture.txt
 
-The personal handwriting training file my_handwriting_templates.json is kept out of this public repository because it contains personal handwriting training data.
+The personal handwriting training file my_handwriting_templates.json contains personal handwriting training data.
 
 ## Development Notes
 
