@@ -1,0 +1,21 @@
+# Build output
+bin/
+build/
+obj/
+.vscode/
+*.user
+*.suo
+
+# Generated runtime files
+src/camera_frame.bmp
+src/camera_frame.jpg
+src/camera_frame.jpg.tmp.jpg
+src/hand_command.txt
+src/hand_gesture.txt
+
+# Personal handwriting data
+src/my_handwriting_templates.json
+
+# Python cache
+__pycache__/
+*.pyc
