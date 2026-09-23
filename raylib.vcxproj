@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Globals"><ProjectGuid>{8898EA18-743A-15EF-5DF5-284349369C3F}</ProjectGuid><Keyword>Win32Proj</Keyword><RootNamespace>raylib</RootNamespace></PropertyGroup>
+  <PropertyGroup Label="Configuration"><ConfigurationType>StaticLibrary</ConfigurationType><PlatformToolset>v145</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup><ClCompile><WarningLevel>Level3</WarningLevel><PreprocessorDefinitions>PLATFORM_DESKTOP;GRAPHICS_API_OPENGL_33;_CRT_SECURE_NO_WARNINGS;_WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions><AdditionalIncludeDirectories>build\external\raylib-master\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile></ItemDefinitionGroup>
+  <ItemGroup><ClCompile Include="build\external\raylib-master\src\rcore.c" /><ClCompile Include="build\external\raylib-master\src\rshapes.c" /><ClCompile Include="build\external\raylib-master\src\rtextures.c" /><ClCompile Include="build\external\raylib-master\src\rtext.c" /><ClCompile Include="build\external\raylib-master\src\utils.c" /><ClCompile Include="build\external\raylib-master\src\rglfw.c" /></ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
