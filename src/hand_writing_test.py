@@ -39,7 +39,7 @@ HAND_GESTURE_PATH = r"D:\RubiksCubeGame\raylib-quickstart-main\src\hand_gesture.
 LETTERS = ["R", "L", "U", "D", "F", "B"]
 
 NUM_POINTS = 64
-MIN_POINT_DISTANCE = 4
+MIN_POINT_DISTANCE = 3
 MIN_LETTER_POINTS = 20
 MAX_STORED_POINTS = 10000
 
@@ -47,7 +47,8 @@ MAX_STORED_POINTS = 10000
 EXAMPLES_PER_LETTER = 3
 
 # Recognition tolerance.
-MAX_ACCEPT_DISTANCE = 0.42
+MAX_ACCEPT_DISTANCE = 0.46
+RECOGNITION_MARGIN = 0.035
 
 # ============================================================
 # MediaPipe
@@ -354,12 +355,21 @@ def recognize(points):
 
     user = prepare(points)
 
-    candidates = []
+    # --------------------------------------------------------
+    # Compare the new drawing against EVERY personal sample.
+    # Instead of trusting one lucky/incorrect template match,
+    # take the average of the two closest examples for each
+    # letter.
+    # --------------------------------------------------------
+
+    letter_distances = {}
 
     for letter in LETTERS:
 
         if not templates[letter]:
             continue
+
+        distances = []
 
         for example in templates[letter]:
 
@@ -373,27 +383,62 @@ def recognize(points):
                 example_points
             )
 
-            candidates.append(
-                (d, letter)
-            )
+            distances.append(d)
 
-    if not candidates:
+        distances.sort()
+
+        # With 3 trained examples, use the best 2.
+        # If only one exists, use that one.
+        count = min(
+            2,
+            len(distances)
+        )
+
+        average_distance = (
+            sum(distances[:count])
+            / count
+        )
+
+        letter_distances[letter] = average_distance
+
+    if not letter_distances:
         return "TRAIN", 0.0
 
-    candidates.sort(
-        key=lambda x: x[0]
+    ranked = sorted(
+        letter_distances.items(),
+        key=lambda item: item[1]
     )
 
-    best_distance = candidates[0][0]
-    best_letter = candidates[0][1]
+    best_letter = ranked[0][0]
+    best_distance = ranked[0][1]
 
-    # Convert distance to a simple score.
+    if len(ranked) >= 2:
+        second_distance = ranked[1][1]
+    else:
+        second_distance = best_distance + 1.0
+
+    # Convert distance into an easy-to-read score.
     score = max(
         0.0,
-        1.0 - best_distance / 0.50
+        min(
+            1.0,
+            1.0 - best_distance / 0.50
+        )
     )
 
+    # Reject drawings that are too different from the trained
+    # handwriting.
     if best_distance > MAX_ACCEPT_DISTANCE:
+        return "?", score
+
+    # Reject ambiguous letters where two trained letters are
+    # almost equally close. This helps with R/B and similar
+    # shapes without adding a noticeable delay.
+    if (
+        second_distance - best_distance
+        <
+        RECOGNITION_MARGIN
+    ):
         return "?", score
 
     return best_letter, score
@@ -403,29 +448,102 @@ def recognize(points):
 # Finger posture
 # ============================================================
 
-def finger_closed(lm, tip, pip):
+def point_xy(lm, index):
+    return (
+        lm[index].x,
+        lm[index].y
+    )
+
+
+def finger_distance(lm, a, b):
+    return distance(
+        point_xy(lm, a),
+        point_xy(lm, b)
+    )
+
+
+def finger_closed(lm, tip, pip, mcp):
+
+    # Primary test: fingertip is not clearly above the PIP.
+    vertical_closed = (
+        lm[tip].y
+        >=
+        lm[pip].y - 0.045
+    )
+
+    # Secondary test: fingertip is relatively close to the
+    # finger base. This helps when the hand is tilted.
+    tip_to_mcp = finger_distance(
+        lm,
+        tip,
+        mcp
+    )
+
+    pip_to_mcp = finger_distance(
+        lm,
+        pip,
+        mcp
+    )
+
+    distance_closed = (
+        tip_to_mcp
+        <
+        pip_to_mcp * 1.55
+    )
 
     return (
-        lm[tip].y
-        > lm[pip].y - 0.03
+        vertical_closed
+        or
+        distance_closed
     )
 
 
 def index_open(lm):
 
-    return (
+    vertical_open = (
         lm[8].y
-        < lm[6].y - 0.015
+        <
+        lm[6].y - 0.015
+    )
+
+    tip_to_wrist = finger_distance(
+        lm,
+        8,
+        0
+    )
+
+    pip_to_wrist = finger_distance(
+        lm,
+        6,
+        0
+    )
+
+    distance_open = (
+        tip_to_wrist
+        >
+        pip_to_wrist * 1.08
+    )
+
+    return (
+        vertical_open
+        or
+        distance_open
     )
 
 
 def writing_hand(lm):
 
+    # User's intended gesture:
+    # index = open/writing
+    # middle/ring/little = closed
     return (
         index_open(lm)
-        and finger_closed(lm, 12, 10)
-        and finger_closed(lm, 16, 14)
-        and finger_closed(lm, 20, 18)
+        and
+        finger_closed(lm, 12, 10, 9)
+        and
+        finger_closed(lm, 16, 14, 13)
+        and
+        finger_closed(lm, 20, 18, 17)
     )
 
 
@@ -494,6 +612,7 @@ def send_command(letter):
             pass
 
         print("CUBE COMMAND:", letter)
+        detected_letter = letter
 
     except Exception as e:
 
@@ -683,7 +802,7 @@ def label_pending(letter):
 
 print()
 print("================================================")
-print("      PERSONAL HANDWRITING RECOGNITION V3")
+print("      PERSONAL HANDWRITING RECOGNITION V4")
 print("================================================")
 print()
 print("Supported letters: R L U D F B")
@@ -827,7 +946,7 @@ while True:
 
     cv2.putText(
         frame,
-        "HAND WRITING CUBE CONTROL",
+        "HAND WRITING CUBE CONTROL V4",
         (20, 37),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.65,
@@ -879,108 +998,3 @@ while True:
         (255, 255, 255),
         2,
         cv2.LINE_AA
-    )
-
-    cv2.putText(
-        frame,
-        "SCORE: " + str(round(confidence, 2)),
-        (20, 148),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.43,
-        (255, 255, 255),
-        1,
-        cv2.LINE_AA
-    )
-
-    # Training progress.
-    progress = "TRAIN: "
-
-    for letter in LETTERS:
-
-        progress += (
-            letter
-            + ":"
-            + str(len(templates[letter]))
-            + "  "
-        )
-
-    cv2.putText(
-        frame,
-        progress,
-        (20, 174),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.36,
-        (255, 255, 255),
-        1,
-        cv2.LINE_AA
-    )
-
-    if pending_message:
-
-        cv2.putText(
-            frame,
-            pending_message,
-            (440, 35),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.50,
-            (255, 255, 255),
-            2,
-            cv2.LINE_AA
-        )
-
-    # --------------------------------------------------------
-    # Save for raylib
-    # --------------------------------------------------------
-
-    save_camera_frame(frame)
-
-    # --------------------------------------------------------
-    # Preview
-    # --------------------------------------------------------
-
-    cv2.imshow(
-        "Personal Handwriting Test",
-        frame
-    )
-
-    key = cv2.waitKey(1) & 0xFF
-
-    # --------------------------------------------------------
-    # Clear
-    # --------------------------------------------------------
-
-    if key == ord("c"):
-
-        writing_points.clear()
-        current_stroke.clear()
-
-        detected_letter = "NONE"
-        confidence = 0.0
-
-        pending_sample = None
-        pending_message = ""
-
-        last_tip = None
-        writing = False
-
-    # --------------------------------------------------------
-    # Quit
-    # --------------------------------------------------------
-
-    elif key == ord("q") or key == 27:
-
-        break
-
-
-# ============================================================
-# Cleanup
-# ============================================================
-
-save_templates()
-
-cap.release()
-hands.close()
-cv2.destroyAllWindows()
-
-print()
-print("Personal handwriting test stopped.")
